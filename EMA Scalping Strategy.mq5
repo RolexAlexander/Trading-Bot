@@ -1,6 +1,6 @@
 #property copyright "Copyright 2022, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
-#property version   "1.01"
+#property version   "1.02"
 #include <Trade/Trade.mqh>
 CTrade Trade;
 int Handle_Fast_MA;
@@ -22,6 +22,20 @@ int OnInit()
    Handle_Lower_MiddleMA = iMA(_Symbol,PERIOD_M5,13,0,MODE_EMA,PRICE_CLOSE);
    Handle_Lower_SMA = iMA(_Symbol,PERIOD_M5,21,0,MODE_EMA,PRICE_CLOSE);
    TradeTicket = 0;*/
+   int numberofpositions_open  = PositionsTotal();
+   if(numberofpositions_open <= 0){
+      TradeTicket = 0;
+   }
+   else{
+      for(int i = numberofpositions_open-1;i<=0;i--){
+         Print("There are positions open for the currency I You are Currently Trading.");
+         ulong ticket = PositionGetTicket(i);
+         if (PositionGetSymbol(i) == _Symbol){
+            TradeTicket = ticket;
+         }
+      }
+   }
+   TradeTicket = PositionGetTicket(0);
    return(INIT_SUCCEEDED);
   }
 void OnDeinit(const int reason)
@@ -30,16 +44,7 @@ void OnDeinit(const int reason)
    
   }
 void OnTick()
-  {
-   int numberofpositions = PositionsTotal();
-   if (numberofpositions >= 2){
-      Print("There are more than two positions open");
-      for(int i = numberofpositions-1;i <= 0; i--){
-         ulong openposition = PositionGetTicket(i);
-         Trade.PositionClose(openposition);
-         Print("Double Position Closed");
-      }
-   }  
+  { 
    Handle_Fast_MA = iMA(_Symbol,PERIOD_H1,8,0,MODE_EMA,PRICE_CLOSE);
    Handle_Slow_MA = iMA(_Symbol,PERIOD_H1,21,0,MODE_EMA,PRICE_CLOSE);
    
@@ -67,6 +72,12 @@ void OnTick()
    if (FMA[0] > SMA[0]){
       Print("Market is in UpTrend");
       trend_Direction = 1;
+      for(int i = PositionsTotal();i<=0;i--){
+         long postype = PositionGetInteger(POSITION_TYPE);
+         if(postype == POSITION_TYPE_SELL){
+            Trade.PositionClose(PositionGetTicket(i));
+         }
+      }
       if(LFMA[0] < LMMA[0] && LMMA[0] < LSMA[0]){
          Print("Close Position");
                      if (TradeTicket > 0){
@@ -100,6 +111,12 @@ void OnTick()
    if(SMA[0] > FMA[0]){
       Print("Market is in Down Trend");
       trend_Direction = -1;
+      for(int i = PositionsTotal();i<=0;i--){
+         long postype = PositionGetInteger(POSITION_TYPE);
+         if(postype == POSITION_TYPE_BUY){
+            Trade.PositionClose(PositionGetTicket(i));
+         }
+      }
       if(LFMA[0] > LMMA[0] && LMMA[0] > LSMA[0]){
                Print("Close Position");
                   if (TradeTicket > 0){
