@@ -66,8 +66,9 @@ void OnTick()
    CopyBuffer(Handle_Lower_MiddleMA,0,1,2,LMMA);
    CopyBuffer(Handle_Lower_SMA,0,1,2,LSMA);
    
-   Comment("Fast MA Value: ", FMA[0]);
-   Comment("Slow MA Value: ", SMA[0]);
+   int Allpositions = PositionsTotal();
+   /*Comment("\nFast MA Value: ", FMA[0],
+            "Slow MA Value: ", SMA[0]);*/
    
    if (FMA[0] > SMA[0]){
       Print("Market is in UpTrend");
@@ -149,16 +150,11 @@ void OnTick()
          }
    }
 
-   Comment("\nNew Line");
-   Comment("\nNew Line");
-   Comment("\nNew Line");
-   Comment("\nNew Line");
-   Comment("\nNew Line");
-   Comment("\nNew Line");
-   Comment("\nFast MA Value: ", FMA[0]);
-   Comment("\nSlow MA Value: ", SMA[0]);
-   Comment("\nLower Time Frame Fast Moving Average: ", LFMA[0],
+   Comment("\nFast MA Value: ", FMA[0],
+            "\nSlow MA Value: ", SMA[0],
+            "\nLower Time Frame Fast Moving Average: ", LFMA[0],
             "\nLower Time Frame Middle Moving Average: ", LMMA[0],
-            "\nLower Time Frame Slow Moving Average: ", LSMA[0]);
-   Comment("\nTrend Direction: ", trend_Direction);
+            "\nLower Time Frame Slow Moving Average: ", LSMA[0],
+            "\nTrend Direction: ", trend_Direction,
+            "\nNumber of Open Positions: ", Allpositions);
   }
