@@ -16,6 +16,7 @@ double current_price;
 int emagic = 3;
 ulong TradeTicket;
 double Rlots = 0.05;
+double request_result;
 input int trailingstop = 500; //Trailing Stop Loss
 
 input int MagicNumber = 3; // Magic Number 
@@ -24,27 +25,6 @@ input double VolumeTrade = 0.02; //Trading Volume
 int trend_Direction = 0;
 int OnInit()
   {
-   /*Handle_Fast_MA = iMA(_Symbol,PERIOD_H1,8,0,MODE_EMA,PRICE_CLOSE);
-   Handle_Slow_MA = iMA(_Symbol,PERIOD_H1,21,0,MODE_EMA,PRICE_CLOSE);
-   
-   Handle_Lower_FMA = iMA(_Symbol,PERIOD_M5,8,0,MODE_EMA,PRICE_CLOSE);
-   Handle_Lower_MiddleMA = iMA(_Symbol,PERIOD_M5,13,0,MODE_EMA,PRICE_CLOSE);
-   Handle_Lower_SMA = iMA(_Symbol,PERIOD_M5,21,0,MODE_EMA,PRICE_CLOSE);
-   TradeTicket = 0;
-   int numberofpositions_open  = PositionsTotal();
-   if(numberofpositions_open <= 0){
-      TradeTicket = 0;
-   }
-   else{
-      for(int i = numberofpositions_open-1;i==0;i--){
-         Print("There are positions open for the currency I You are Currently Trading.");
-         ulong ticket = PositionGetTicket(i);
-         if (PositionGetSymbol(i) == _Symbol){
-            TradeTicket = ticket;
-         }
-      }
-   }
-   TradeTicket = PositionGetTicket(0);*/
    return(INIT_SUCCEEDED);
   }
 void OnDeinit(const int reason)
@@ -52,6 +32,36 @@ void OnDeinit(const int reason)
 
    
   }
+// create a new pending order
+void CreatePendingOrder(string symbol, ENUM_ORDER_TYPE type, double volume)
+{
+   double price = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double stoploss = price - 0.005;
+   double tp = price + 0.01;
+   
+   MqlTradeRequest request;
+   ZeroMemory(request);
+   request.action = TRADE_ACTION_PENDING;
+   request.type = type;
+   request.symbol = _Symbol;
+   request.volume = 0.1;
+   request.price = price;
+   request.sl = stoploss;
+   request.tp = tp;
+   request.comment = "Pending Buy Limit Order";
+   
+   MqlTradeResult result;
+   ZeroMemory(result);
+   
+   request_result = OrderSend(request, result);
+   if(result.order){
+      Print("This is the radeticket");
+      TradeTicket = result.order;
+   }
+   Print("Result code: ", result.retcode);
+   Print("Order ticket: ", result.order);
+}
+
   void start_trades(){
       /*double stoploss = SymbolInfoDouble(_Symbol,SYMBOL_POINT) * trailingstop;
       static int digits = (int)SymbolInfoInteger (_Symbol, SYMBOL_DIGITS);
@@ -104,9 +114,25 @@ void OnTick()
    
    if(HUB[0] <= current_price){
       signal = "Sell";
+      if(current_price <= LUB[0] && signal=="Sell"){
+         if(TradeTicket){
+            Trade.PositionClose(TradeTicket);
+         }
+         Print("About to enter a buy position");
+         Trade.Sell(0.2,_Symbol);
+         Trade.PositionClose(TradeTicket);
+      }
    }
    if(HLB[0] >= current_price){
       signal = "Buy";
+      if(current_price >= LLB[0] && signal=="Buy"){
+         if(TradeTicket){
+            Trade.PositionClose(TradeTicket);
+         }
+         Print("About to enter a buy position");
+         Trade.Buy(0.2,_Symbol);
+         TradeTicket = Trade.ResultOrder();
+      }
    }
    
    /*
